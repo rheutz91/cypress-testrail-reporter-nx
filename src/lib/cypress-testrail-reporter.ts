@@ -79,26 +79,26 @@ export class CypressTestRailReporter extends reporters.Spec {
         * which case that will be used and no new one created.
         */
         if (!TestRailCache.retrieve('runId')) {
-            if (this.reporterOptions.suiteId) {
-              TestRailLogger.log(`Following suiteId has been set in cypress.json file: ${this.suiteId}`);
-            }
-            const executionDateTime = moment().format('MMM Do YYYY, HH:mm (Z)');
-            const name = `${this.reporterOptions.runName || 'Automated test run'} ${executionDateTime}`;
-            if (this.reporterOptions.disableDescription) {
-              var description = '';
+          if (this.reporterOptions.suiteId) {
+            TestRailLogger.log(`Following suiteId has been set in cypress.json file: ${this.suiteId}`);
+          }
+          const executionDateTime = moment().format('MMM Do YYYY, HH:mm (Z)');
+          const name = `${this.reporterOptions.runName || 'Automated test run'} ${executionDateTime}`;
+          if (this.reporterOptions.disableDescription) {
+            var description = '';
+          } else {
+            if (process.env.CYPRESS_CI_JOB_URL) {
+              var description = process.env.CYPRESS_CI_JOB_URL;
             } else {
-              if (process.env.CYPRESS_CI_JOB_URL) {
-                var description = process.env.CYPRESS_CI_JOB_URL;
-              } else {
-                var description = 'For the Cypress run visit https://dashboard.cypress.io/#/projects/runs';
-              }
+              var description = 'For the Cypress run visit https://dashboard.cypress.io/#/projects/runs';
             }
-            TestRailLogger.log(`Creating TestRail Run with name: ${name}`);
-            this.testRailApi.createRun(name, description, this.suiteId);
+          }
+          TestRailLogger.log(`Creating TestRail Run with name: ${name}`);
+          this.testRailApi.createRun(name, description, this.suiteId);
         } else {
-            // use the cached TestRail Run ID
-            this.runId = TestRailCache.retrieve('runId');
-            TestRailLogger.log(`Using existing TestRail Run with ID: '${this.runId}'`);
+          // use the cached TestRail Run ID
+          this.runId = TestRailCache.retrieve('runId');
+          TestRailLogger.log(`Using existing TestRail Run with ID: '${this.runId}'`);
         }
       });
 
@@ -119,20 +119,20 @@ export class CypressTestRailReporter extends reporters.Spec {
          * When we reach final number of spec files 
          * we should close test run at the end
          */
-        var numSpecFiles = this.testRailValidation.countTestSpecFiles();
-        var counter = TestRailCache.retrieve('runCounter');
+        // var numSpecFiles = this.testRailValidation.countTestSpecFiles();
+        // var counter = TestRailCache.retrieve('runCounter');
         // load runId before purging testrail-cache.txt
-        this.runId = TestRailCache.retrieve('runId');
+        // this.runId = TestRailCache.retrieve('runId');
 
-        if (numSpecFiles.length > counter) {
-          runCounter++
-        } else {
-          this.testRailApi.closeRun();
-          /**
-           * Remove testrail-cache.txt file at the end of execution
-           */
-          TestRailCache.purge();
-        }
+        // if (numSpecFiles.length > counter) {
+        //   runCounter++
+        // } else {
+        //   this.testRailApi.closeRun();
+        /**
+         * Remove testrail-cache.txt file at the end of execution
+         */
+        //   TestRailCache.purge();
+        // }
 
         /**
          * Notify about the results at the end of execution
@@ -153,7 +153,7 @@ export class CypressTestRailReporter extends reporters.Spec {
    * to upload failed screenshot for easier debugging in TestRail
    * Note: Uploading of screenshot is configurable option
    */
-  public submitResults (status, test, comment) {
+  public submitResults(status, test, comment) {
     let caseIds = titleToCaseIds(test.title)
     const invalidCaseIds = caseIds.filter(caseId => !this.serverTestCaseIds.includes(caseId));
     caseIds = caseIds.filter(caseId => this.serverTestCaseIds.includes(caseId))

@@ -123,20 +123,19 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
                  * When we reach final number of spec files
                  * we should close test run at the end
                  */
-                var numSpecFiles = _this.testRailValidation.countTestSpecFiles();
-                var counter = TestRailCache.retrieve('runCounter');
+                // var numSpecFiles = this.testRailValidation.countTestSpecFiles();
+                // var counter = TestRailCache.retrieve('runCounter');
                 // load runId before purging testrail-cache.txt
-                _this.runId = TestRailCache.retrieve('runId');
-                if (numSpecFiles.length > counter) {
-                    runCounter++;
-                }
-                else {
-                    _this.testRailApi.closeRun();
-                    /**
-                     * Remove testrail-cache.txt file at the end of execution
-                     */
-                    TestRailCache.purge();
-                }
+                // this.runId = TestRailCache.retrieve('runId');
+                // if (numSpecFiles.length > counter) {
+                //   runCounter++
+                // } else {
+                //   this.testRailApi.closeRun();
+                /**
+                 * Remove testrail-cache.txt file at the end of execution
+                 */
+                //   TestRailCache.purge();
+                // }
                 /**
                  * Notify about the results at the end of execution
                  */
@@ -160,7 +159,7 @@ var CypressTestRailReporter = /** @class */ (function (_super) {
     CypressTestRailReporter.prototype.submitResults = function (status, test, comment) {
         var _a;
         var _this = this;
-        var caseIds = shared_1.titleToCaseIds(test.title);
+        var caseIds = (0, shared_1.titleToCaseIds)(test.title);
         var invalidCaseIds = caseIds.filter(function (caseId) { return !_this.serverTestCaseIds.includes(caseId); });
         caseIds = caseIds.filter(function (caseId) { return _this.serverTestCaseIds.includes(caseId); });
         if (invalidCaseIds.length > 0)

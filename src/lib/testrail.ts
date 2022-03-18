@@ -7,6 +7,7 @@ const TestRailLogger = require('./testrail.logger');
 const TestRailCache = require('./testrail.cache');
 import { TestRailOptions, TestRailResult } from './testrail.interface';
 
+const apiVersionPath = '/api/v2'
 export class TestRail {
   private base: String;
   private runId: Number;
@@ -15,7 +16,7 @@ export class TestRail {
   private retries: number;
 
   constructor(private options: TestRailOptions) {
-    this.base = `${options.host}/index.php?/api/v2`;
+    this.base = `${options.host}/index.php?`;
     this.runId;
   }
 
@@ -29,13 +30,13 @@ export class TestRail {
   private makeSync(promise) {
     let done = false;
     let result = undefined;
-    (async() => result = await promise.finally(() => done = true))();
+    (async () => result = await promise.finally(() => done = true))();
     deasync.loopWhile(() => !done);
     return result;
   }
 
-  public getCases (suiteId: number) {
-    let url = `${this.base}/get_cases/${this.options.projectId}&suite_id=${suiteId}`
+  public getCases(suiteId: number) {
+    let url = `${this.base}${apiVersionPath}/get_cases/${this.options.projectId}&suite_id=${suiteId}`
     if (this.options.groupId) {
       url += `&section_id=${this.options.groupId}`
     }
@@ -45,32 +46,43 @@ export class TestRail {
     if (this.options.typeId) {
       url += `&type_id=${this.options.typeId}`
     }
-    return this.makeSync(
-      axios({
-        method:'get',
-        url: url,
-        headers: { 'Content-Type': 'application/json' }, 
-        auth: {
+    let cases = []
+    let previousUrl = null
+    while (url != previousUrl) {
+      previousUrl = url;
+      this.makeSync(
+        axios({
+          method: 'get',
+          url: url,
+          headers: { 'Content-Type': 'application/json' },
+          auth: {
             username: this.options.username,
             password: this.options.password
-        } 
-      })
-      .then(response => {
-        return response.data.cases.map(item =>item.id)
-      })
-      .catch(error => console.error(error))
-    )
+          }
+        })
+          .then(response => {
+            cases = cases.concat(response.data.cases.map(item => item.id))
+            if (response.data._links.next) {
+              url = `${this.base}${apiVersionPath}${response.data._links.next}`
+            }
+          })
+          .catch(error => {
+            console.error(error)
+          })
+      )
+    }
+    return cases
   }
 
-  public createRun (name: string, description: string, suiteId: number) {
-    if (this.options.includeAllInTestRun === false){
+  public createRun(name: string, description: string, suiteId: number) {
+    if (this.options.includeAllInTestRun === false) {
       this.includeAll = false;
       this.caseIds = this.getCases(suiteId);
     }
     this.makeSync(
       axios({
         method: 'post',
-        url: `${this.base}/add_run/${this.options.projectId}`,
+        url: `${this.base}${apiVersionPath}/add_run/${this.options.projectId}`,
         headers: { 'Content-Type': 'application/json' },
         auth: {
           username: this.options.username,
@@ -84,12 +96,12 @@ export class TestRail {
           case_ids: this.caseIds
         }),
       })
-      .then(response => {
+        .then(response => {
           this.runId = response.data.id;
           // cache the TestRail Run ID
           TestRailCache.store('runId', this.runId);
-      })
-      .catch(error => console.error(error))
+        })
+        .catch(error => console.error(error))
     );
   }
 
@@ -98,7 +110,7 @@ export class TestRail {
     this.makeSync(
       axios({
         method: 'post',
-        url: `${this.base}/delete_run/${this.runId}`,
+        url: `${this.base}${apiVersionPath}/delete_run/${this.runId}`,
         headers: { 'Content-Type': 'application/json' },
         auth: {
           username: this.options.username,
@@ -113,7 +125,7 @@ export class TestRail {
     return this.makeSync(
       axios({
         method: 'post',
-        url: `${this.base}/add_results_for_cases/${this.runId}`,
+        url: `${this.base}${apiVersionPath}/add_results_for_cases/${this.runId}`,
         headers: { 'Content-Type': 'application/json' },
         auth: {
           username: this.options.username,
@@ -121,21 +133,21 @@ export class TestRail {
         },
         data: JSON.stringify({ results }),
       })
-      .then(response => response.data)
-      .catch(error => { 
-        console.error(error); 
-      })
+        .then(response => response.data)
+        .catch(error => {
+          console.error(error);
+        })
     )
   }
 
-  public uploadAttachment (resultId, path) {
+  public uploadAttachment(resultId, path) {
     const form = new FormData();
     form.append('attachment', fs.createReadStream(path));
 
     this.makeSync(
       axios({
         method: 'post',
-        url: `${this.base}/add_attachment_to_result/${resultId}`,
+        url: `${this.base}${apiVersionPath}/add_attachment_to_result/${resultId}`,
         headers: { ...form.getHeaders() },
         auth: {
           username: this.options.username,
@@ -147,13 +159,24 @@ export class TestRail {
   }
 
   // This function will attach failed screenshot on each test result(comment) if founds it
-  public uploadScreenshots (caseId, resultId) {
-    const SCREENSHOTS_FOLDER_PATH = path.join(__dirname, 'cypress/screenshots');
+  public uploadScreenshots(caseId, resultId) {
+    var cliArgs = process.argv.slice(2);
+    var index, value, result;
+    for (index = 0; index < cliArgs.length; ++index) {
+      value = cliArgs[index];
+      if (
+        value.includes("apps") === true
+      ) {
+        result = value;
+        break;
+      }
+    }
+    const SCREENSHOTS_FOLDER_PATH = path.join(`./dist/cypress/${result}/`, 'screenshots');
 
     fs.readdir(SCREENSHOTS_FOLDER_PATH, (err, files) => {
       if (err) {
         return console.log('Unable to scan screenshots folder: ' + err);
-      } 
+      }
 
       files.forEach(file => {
         if (file.includes(`C${caseId}`) && /(failed|attempt)/g.test(file)) {
@@ -172,17 +195,17 @@ export class TestRail {
     this.makeSync(
       axios({
         method: 'post',
-        url: `${this.base}/close_run/${this.runId}`,
+        url: `${this.base}${apiVersionPath}/close_run/${this.runId}`,
         headers: { 'Content-Type': 'application/json' },
         auth: {
           username: this.options.username,
           password: this.options.password,
         },
       })
-      .then(() => {
+        .then(() => {
           TestRailLogger.log('Test run closed successfully');
-      })
-      .catch(error => console.error(error))
+        })
+        .catch(error => console.error(error))
     );
   }
 }
