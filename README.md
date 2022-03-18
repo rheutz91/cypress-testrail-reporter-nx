@@ -1,25 +1,23 @@
-# TestRail Reporter for Cypress
+# TestRail Reporter for Cypress on NX
 
-[![version](https://img.shields.io/npm/v/cypress-testrail-reporter.svg)](https://www.npmjs.com/package/cypress-testrail-reporter)
-[![downloads](https://img.shields.io/npm/dt/cypress-testrail-reporter.svg)](https://www.npmjs.com/package/cypress-testrail-reporter)
-[![MIT License](https://img.shields.io/github/license/Vivify-Ideas/cypress-testrail-reporter.svg)](https://github.com/Vivify-Ideas/cypress-testrail-reporter/blob/master/LICENSE.md)
+[![version](https://img.shields.io/npm/v/cypress-testrail-reporter-nx.svg)](https://www.npmjs.com/package/cypress-testrail-reporter-nx)
+[![downloads](https://img.shields.io/npm/dt/cypress-testrail-reporter-nx.svg)](https://www.npmjs.com/package/cypress-testrail-reporter-nx)
 
-Publishes [Cypress](https://www.cypress.io/) runs on TestRail. 
+Publishes [Cypress](https://www.cypress.io/) NX runs on TestRail.
 
 Core features:
 
-* Test results are aggregated under the same test run if you are executing more spec(test) files and they are belongs to the same suite
-* Results are reported immediately after single test execution (real-time reporting)
-* Test run would be closed after last spec(test) file has been finished
-* Possibility to upload screenshots for failed and retried test cases - optional (**allowFailedScreenshotUpload: true**)
-* Multi suite project support (set **suiteId=1** in **cypress.json** or set it as a part of runtime environment variables as **testRailSuiteId=1**)
-* Reporting retest status of a test cases - handy in terms of marking tests as flaky (test is reported with retest status for the first try and after second try it passes) Note: cypress retry logic must be enabled for this feature.  
-
+- Test results are aggregated under the same test run if you are executing more spec(test) files and they are belongs to the same suite
+- Results are reported immediately after single test execution (real-time reporting)
+- Test run would be closed after last spec(test) file has been finished
+- Possibility to upload screenshots for failed and retried test cases - optional (**allowFailedScreenshotUpload: true**)
+- Multi suite project support (set **suiteId=1** in **cypress.json** or set it as a part of runtime environment variables as **testRailSuiteId=1**)
+- Reporting retest status of a test cases - handy in terms of marking tests as flaky (test is reported with retest status for the first try and after second try it passes) Note: cypress retry logic must be enabled for this feature.
 
 ## Install
 
 ```shell
-$ npm install cypress-testrail-reporter --save-dev
+$ npm install cypress-testrail-reporter-nx --save-dev
 ```
 
 ## Usage
@@ -28,7 +26,7 @@ Add reporter to your `cypress.json`:
 
 ```json
 ...
-"reporter": "cypress-testrail-reporter",
+"reporter": "cypress-testrail-reporter-nx",
 "reporterOptions": {
   "host": "https://yourdomain.testrail.com",
   "username": "username",
@@ -84,14 +82,14 @@ This reporter can handle multiple suite project in TestRail. In order to use it,
 ```Javascript
 
 e2e_test1:
-  script: 
+  script:
     - e2e-setup.sh
   variables:
     CYPRESS_SPEC: "cypress/integration/dashboard/*"
     TESTRAIL_SUITEID: 1
 
 e2e_test2:
-  script: 
+  script:
     - e2e-setup.sh
   variables:
     CYPRESS_SPEC: "cypress/integration/login/*"
@@ -133,12 +131,11 @@ You can read the whole TestRail documentation [here](http://docs.gurock.com/).
 
 ## Author
 
-Milutin Savovic - [github](https://github.com/mickosav)
+Ben Hamilton - [github](https://github.com/benhamiltonpro)
 
 ## Core contributors
 
-* [Anes Topcic](https://github.com/sakalaca)
-* [FFdhorkin](https://github.com/FFdhorkin)
+- [Chris Midkiff](https://github.com/ChrisMidkiff)
 
 ## License
 
@@ -146,5 +143,4 @@ This project is licensed under the [MIT license](/LICENSE.md).
 
 ## Acknowledgments
 
-* [Pierre Awaragi](https://github.com/awaragi), owner of the [mocha-testrail-reporter](https://github.com/awaragi/mocha-testrail-reporter) repository that was forked.
-* [Valerie Thoma](https://github.com/ValerieThoma) and [Aileen Santos](https://github.com/asantos3026) for proofreading the README.md file and making it more understandable.
+- [Vivify Ideas](https://github.com/Vivify-Ideas), owner of the [cypress-testrail-reporter](https://github.com/Vivify-Ideas/cypress-testrail-reporter) repository that was forked.
