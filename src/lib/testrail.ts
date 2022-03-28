@@ -158,36 +158,41 @@ export class TestRail {
     )
   }
 
+  public getAllFiles(dir: string) {
+    let results = [];
+    const list = fs.readdirSync(dir);
+    list.forEach(file => {
+      file = dir + '/' + file;
+      const stat = fs.statSync(file);
+      if (stat && stat.isDirectory()) {
+        results = results.concat(this.getAllFiles(file));
+      } else {
+        results.push(file);
+      }
+    });
+    return results;
+  }
+
+
   // This function will attach failed screenshot on each test result(comment) if founds it
   public uploadScreenshots(caseId, resultId) {
-    var cliArgs = process.argv.slice(2);
-    var index, value, result;
-    for (index = 0; index < cliArgs.length; ++index) {
-      value = cliArgs[index];
-      if (
-        value.includes("apps") === true
-      ) {
-        result = value;
-        break;
-      }
-    }
-    const SCREENSHOTS_FOLDER_PATH = path.join(`./dist/cypress/${result}/`, 'screenshots');
-
-    fs.readdir(SCREENSHOTS_FOLDER_PATH, (err, files) => {
-      if (err) {
-        return console.log('Unable to scan screenshots folder: ' + err);
-      }
-
-      files.forEach(file => {
-        if (file.includes(`C${caseId}`) && /(failed|attempt)/g.test(file)) {
-          try {
-            this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + file)
-          } catch (err) {
-            console.log('Screenshot upload error: ', err)
+    const SCREENSHOTS_FOLDER_PATH = path.join('./cypress/screenshots');
+    try {
+      if (fs.existsSync(SCREENSHOTS_FOLDER_PATH)) {
+        const files = this.getAllFiles(SCREENSHOTS_FOLDER_PATH);
+        for (const file of files) {
+          if (file.includes(`C${caseId}`) && /(failed|attempt)/g.test(file)) {
+            try {
+              this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + file)
+            } catch (err) {
+              console.log('Screenshot upload error: ', err)
+            }
           }
         }
-      });
-    });
+      }
+    } catch (error) {
+      return console.log('Unable to scan screenshots folder: ' + error);
+    }
   };
 
   public closeRun() {
