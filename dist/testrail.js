@@ -193,34 +193,44 @@ var TestRail = /** @class */ (function () {
             data: form,
         }));
     };
+    TestRail.prototype.getAllFiles = function (dir) {
+        var _this = this;
+        var results = [];
+        var list = fs.readdirSync(dir);
+        list.forEach(function (file) {
+            file = dir + '/' + file;
+            var stat = fs.statSync(file);
+            if (stat && stat.isDirectory()) {
+                results = results.concat(_this.getAllFiles(file));
+            }
+            else {
+                results.push(file);
+            }
+        });
+        return results;
+    };
     // This function will attach failed screenshot on each test result(comment) if founds it
     TestRail.prototype.uploadScreenshots = function (caseId, resultId) {
-        var _this = this;
-        var cliArgs = process.argv.slice(2);
-        var index, value, result;
-        for (index = 0; index < cliArgs.length; ++index) {
-            value = cliArgs[index];
-            if (value.includes("apps") === true) {
-                result = value;
-                break;
-            }
-        }
-        var SCREENSHOTS_FOLDER_PATH = path.join("./dist/cypress/" + result + "/", 'screenshots');
-        fs.readdir(SCREENSHOTS_FOLDER_PATH, function (err, files) {
-            if (err) {
-                return console.log('Unable to scan screenshots folder: ' + err);
-            }
-            files.forEach(function (file) {
-                if (file.includes("C" + caseId) && /(failed|attempt)/g.test(file)) {
-                    try {
-                        _this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + file);
-                    }
-                    catch (err) {
-                        console.log('Screenshot upload error: ', err);
+        var SCREENSHOTS_FOLDER_PATH = path.join('./cypress/screenshots');
+        try {
+            if (fs.existsSync(SCREENSHOTS_FOLDER_PATH)) {
+                var files = this.getAllFiles(SCREENSHOTS_FOLDER_PATH);
+                for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
+                    var file = files_1[_i];
+                    if (file.includes("C" + caseId) && /(failed|attempt)/g.test(file)) {
+                        try {
+                            this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + file);
+                        }
+                        catch (err) {
+                            console.log('Screenshot upload error: ', err);
+                        }
                     }
                 }
-            });
-        });
+            }
+        }
+        catch (error) {
+            return console.log('Unable to scan screenshots folder: ' + error);
+        }
     };
     ;
     TestRail.prototype.closeRun = function () {

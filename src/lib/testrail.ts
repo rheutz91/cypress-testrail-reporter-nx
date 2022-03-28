@@ -183,7 +183,7 @@ export class TestRail {
         for (const file of files) {
           if (file.includes(`C${caseId}`) && /(failed|attempt)/g.test(file)) {
             try {
-              this.uploadAttachment(resultId, SCREENSHOTS_FOLDER_PATH + file)
+              this.uploadAttachment(resultId, './' + file)
             } catch (err) {
               console.log('Screenshot upload error: ', err)
             }
